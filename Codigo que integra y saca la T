@@ -1,0 +1,45 @@
+import math as m
+from matplotlib import pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
+from array import array
+import os
+import scipy.integrate as integrate
+data=np.loadtxt('C:/Users/ferchi/.spyder-py3/labo/Mediciones/ferro/puntos_80.txt', delimiter = '\t')
+TvsR=np.loadtxt('TvsR.txt')#tabla valores pt100
+Tref=TvsR[0,:]#temperatura
+Rref=TvsR[1,:]#resistencia
+
+data=data[:12000,:]
+#les pongo nombre a las columnas
+y=data[:,3]#canal bobinas secundarias
+x=data[:,1]#canal bobina principal
+Rt=data[:,2]*1000#porque pasaba 1mA paso de V a R
+t=data[:,0]#tiempo
+#columna 2 era la R
+#integrar:
+y2=np.zeros(len(x))
+for i in range(len(x)-1):
+    y2[i+1]=1/2*(y[i+1]+y[i])*(t[i+1]-t[i])+y2[i]
+
+
+f=lambda x,A,y0:A*x+y0
+
+popt, pcov = curve_fit(f,t,y2)
+y2=y2-popt[0]*t
+
+#tema temperatura
+Rt=np.sum(Rt)/len(Rt)#resistencia de temperatura promedio
+
+d=100
+for i in range(len(Rref)):
+    if abs(Rt-Rref[i])<d:#busco el punto mas cercano a la R de referencia
+          d=abs(Rt-Rref[i])
+          T=Tref[i]
+
+plt.plot(-x,y2)
+plt.grid(True) # Para que quede en hoja cuadriculada
+plt.title('Ciclo de histéresis a '+str(T)+'ºC')
+plt.xlabel('B o H')
+plt.ylabel('H o B')
+plt.legend(loc = 'best') 
